@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radial Grid</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.18/paper-full.min.js"></script>
+</head>
+<body>
+    <button id="toggle-controls" title="Toggle controls">&#x2630;</button>
+    <div id="shortcuts-wrap">
+        <button id="shortcuts-btn" title="Shortcuts">i</button>
+        <div id="shortcuts-tooltip">
+            <div class="shortcut-row"><span class="shortcut-key">S</span> Save PNG</div>
+            <div class="shortcut-row"><span class="shortcut-key">A</span> Save SVG</div>
+            <div class="shortcut-row"><span class="shortcut-key">P</span> Play / Pause</div>
+        </div>
+    </div>
+    <div id="controls">
+        <div class="control-group">
+            <label for="ringCount">Rings</label>
+            <input type="range" id="ringCount" min="3" max="30" value="7">
+            <span id="ringCountVal">7</span>
+        </div>
+        <div class="control-group">
+            <label for="spokeCount">Spokes</label>
+            <input type="range" id="spokeCount" min="0" max="30" value="0">
+            <span id="spokeCountVal">0</span>
+        </div>
+        <details class="control-details">
+            <summary>Geometry</summary>
+            <div class="control-group">
+                <label for="strokeWidth">Stroke</label>
+                <input type="range" id="strokeWidth" min="1" max="50" value="8">
+                <span id="strokeWidthVal">0.8</span>
+            </div>
+            <div class="control-group">
+                <label for="dotSize">Dot Size</label>
+                <input type="range" id="dotSize" min="0" max="50" value="15">
+                <span id="dotSizeVal">1.5</span>
+            </div>
+            <div class="control-group">
+                <label for="segments">Segments</label>
+                <input type="range" id="segments" min="6" max="200" value="72">
+                <span id="segmentsVal">72</span>
+            </div>
+            <div class="control-group">
+                <label for="ringGap">Ring Gap</label>
+                <input type="range" id="ringGap" min="0" max="50" value="8">
+                <span id="ringGapVal">8</span>
+            </div>
+        </details>
+        <div class="control-divider"></div>
+        <div class="control-group">
+            <label for="wobble">Wobble</label>
+            <input type="range" id="wobble" min="0" max="500" value="30">
+            <span id="wobbleVal">30</span>
+        </div>
+        <div class="control-group">
+            <label for="seed">Seed</label>
+            <input type="range" id="seed" min="0" max="200" value="42">
+            <span id="seedVal">42</span>
+        </div>
+        <details class="control-details">
+            <summary>Wobble</summary>
+            <div class="control-group">
+                <label for="frequency">Frequency</label>
+                <input type="range" id="frequency" min="10" max="300" value="100">
+                <span id="frequencyVal">1.0</span>
+            </div>
+            <div class="control-group">
+                <label for="noise">Noise</label>
+                <input type="range" id="noise" min="0" max="100" value="30">
+                <span id="noiseVal">30</span>
+            </div>
+        </details>
+        <div class="control-divider"></div>
+        <details class="control-details">
+            <summary>Layout</summary>
+            <div class="control-group">
+                <label for="radius">Radius</label>
+                <input type="range" id="radius" min="10" max="50" value="45">
+                <span id="radiusVal">45</span>
+            </div>
+            <div class="control-group">
+                <label for="offsetX">Offset X</label>
+                <input type="range" id="offsetX" min="-50" max="50" value="0">
+                <span id="offsetXVal">0</span>
+            </div>
+            <div class="control-group">
+                <label for="offsetY">Offset Y</label>
+                <input type="range" id="offsetY" min="-50" max="50" value="0">
+                <span id="offsetYVal">0</span>
+            </div>
+            <div class="control-group">
+                <label for="rotation">Rotation</label>
+                <input type="range" id="rotation" min="0" max="360" value="0">
+                <span id="rotationVal">0</span>
+            </div>
+        </details>
+        <div class="control-divider"></div>
+        <div class="control-group">
+            <label for="strokeColor">Stroke</label>
+            <input type="color" id="strokeColor" value="#000000">
+        </div>
+        <div class="control-group">
+            <label for="bgColor">Background</label>
+            <input type="color" id="bgColor" value="#ffffff">
+        </div>
+    </div>
+    <div id="animator"></div>
+    <canvas id="canvas" resize></canvas>
+    <canvas id="text-canvas"></canvas>
+    <script src="js/controls.js"></script>
+    <script src="js/sketch.js"></script>
+    <script src="js/animator.js"></script>
+    <script>
+        document.getElementById('toggle-controls').addEventListener('click', function () {
+            document.getElementById('controls').classList.toggle('hidden');
+            document.getElementById('animator').classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
