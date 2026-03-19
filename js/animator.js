@@ -18,9 +18,9 @@ var Animator = (function () {
         'ease-in-back':    [0.6, -0.28, 0.735, 0.045],
         'ease-out-back':   [0.175, 0.885, 0.32, 1.275],
         'ease-in-out-back':[0.68, -0.55, 0.265, 1.55],
-        'custom':          [0.42, 0, 0.58, 1]
+        'custom':          [0, 1.118, 0.68, 1]
     };
-    var currentEasing = 'ease-in-out';
+    var currentEasing = 'custom';
 
     // Cubic bezier solver — attempt to find t for a given x on the bezier curve
     function cubicBezier(x1, y1, x2, y2) {
@@ -104,8 +104,12 @@ var Animator = (function () {
             offsetX: lerp(from.offsetX, to.offsetX, t),
             offsetY: lerp(from.offsetY, to.offsetY, t),
             rotation: lerp(from.rotation, to.rotation, t),
-            strokeColor: lerpColor(from.strokeColor, to.strokeColor, t),
-            bgColor: lerpColor(from.bgColor, to.bgColor, t)
+            layerSpread: lerp(from.layerSpread, to.layerSpread, t),
+            camTheta: lerp(from.camTheta, to.camTheta, t),
+            camPhi: lerp(from.camPhi, to.camPhi, t),
+            camZoom: lerp(from.camZoom, to.camZoom, t),
+            strokeColor: Controls.params.strokeColor,
+            bgColor: Controls.params.bgColor
         };
     }
 
@@ -126,8 +130,10 @@ var Animator = (function () {
             offsetX: p.offsetX,
             offsetY: p.offsetY,
             rotation: p.rotation,
-            strokeColor: p.strokeColor,
-            bgColor: p.bgColor
+            layerSpread: p.layerSpread,
+            camTheta: p.camTheta,
+            camPhi: p.camPhi,
+            camZoom: p.camZoom
         });
         activeStateIndex = states.length - 1;
         renderStates();
@@ -284,14 +290,14 @@ var Animator = (function () {
         // Custom bezier input (hidden unless "custom" selected)
         var customGroup = document.createElement('div');
         customGroup.className = 'control-group bezier-input-group';
-        customGroup.style.display = 'none';
+        customGroup.style.display = '';
         var customLabel = document.createElement('label');
         customLabel.textContent = 'Bezier';
         var customInput = document.createElement('input');
         customInput.type = 'text';
         customInput.id = 'bezierInput';
-        customInput.placeholder = '0.42, 0, 0.58, 1';
-        customInput.value = '0.42, 0, 0.58, 1';
+        customInput.placeholder = '0, 1.118, 0.68, 1';
+        customInput.value = '0, 1.118, 0.68, 1';
         customGroup.appendChild(customLabel);
         customGroup.appendChild(customInput);
         customGroup.appendChild(document.createElement('span'));

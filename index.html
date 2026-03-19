@@ -6,6 +6,14 @@
     <title>Radial Grid</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.18/paper-full.min.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
 </head>
 <body>
     <button id="toggle-controls" title="Toggle controls">&#x2630;</button>
@@ -15,8 +23,10 @@
             <div class="shortcut-row"><span class="shortcut-key">S</span> Save PNG</div>
             <div class="shortcut-row"><span class="shortcut-key">A</span> Save SVG</div>
             <div class="shortcut-row"><span class="shortcut-key">P</span> Play / Pause</div>
+            <div class="shortcut-row"><span class="shortcut-key">V</span> Toggle 2D / 3D</div>
         </div>
     </div>
+    <button id="mode-toggle" title="Toggle 2D/3D">3D</button>
     <div id="controls">
         <div class="control-group">
             <label for="ringCount">Rings</label>
@@ -100,6 +110,30 @@
             </div>
         </details>
         <div class="control-divider"></div>
+        <details class="control-details">
+            <summary>3D</summary>
+            <div class="control-group">
+                <label for="layerSpread">Layer Spread</label>
+                <input type="range" id="layerSpread" min="-100" max="100" value="0">
+                <span id="layerSpreadVal">0</span>
+            </div>
+            <div class="control-group">
+                <label for="camTheta">Cam Angle</label>
+                <input type="range" id="camTheta" min="-180" max="180" value="0">
+                <span id="camThetaVal">0</span>
+            </div>
+            <div class="control-group">
+                <label for="camPhi">Cam Tilt</label>
+                <input type="range" id="camPhi" min="0" max="180" value="31">
+                <span id="camPhiVal">31</span>
+            </div>
+            <div class="control-group">
+                <label for="camZoom">Cam Zoom</label>
+                <input type="range" id="camZoom" min="100" max="2000" value="583">
+                <span id="camZoomVal">583</span>
+            </div>
+        </details>
+        <div class="control-divider"></div>
         <div class="control-group">
             <label for="strokeColor">Stroke</label>
             <input type="color" id="strokeColor" value="#000000">
@@ -111,14 +145,22 @@
     </div>
     <div id="animator"></div>
     <canvas id="canvas" resize></canvas>
+    <canvas id="canvas3d" style="display:none;"></canvas>
+    <canvas id="view-cube" style="display:none;" width="120" height="120"></canvas>
     <canvas id="text-canvas"></canvas>
     <script src="js/controls.js"></script>
     <script src="js/sketch.js"></script>
     <script src="js/animator.js"></script>
+    <script type="module" src="js/sketch3d.js"></script>
     <script>
         document.getElementById('toggle-controls').addEventListener('click', function () {
             document.getElementById('controls').classList.toggle('hidden');
             document.getElementById('animator').classList.toggle('hidden');
+        });
+        document.getElementById('mode-toggle').addEventListener('click', function () {
+            if (typeof window.toggleViewMode === 'function') {
+                window.toggleViewMode();
+            }
         });
     </script>
 </body>

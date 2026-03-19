@@ -55,6 +55,53 @@ body {
     color: rgba(0, 0, 0, 0.7);
 }
 
+#mode-toggle {
+    position: fixed;
+    top: 92px;
+    left: 20px;
+    z-index: 11;
+    width: 30px;
+    height: 30px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-family: -apple-system, 'Inter', system-ui, sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    letter-spacing: 0.02em;
+}
+
+#mode-toggle:hover {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+#canvas3d {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+}
+
+#view-cube {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10;
+    width: 120px;
+    height: 120px;
+    cursor: pointer;
+}
+
 #shortcuts-wrap {
     position: fixed;
     top: 56px;
@@ -493,8 +540,7 @@ input[type="color"]::-moz-color-swatch {
     border-radius: 6px 6px 2px 2px;
 }
 
-#controls.animating .control-group input[type="range"],
-#controls.animating .control-group input[type="color"] {
+#controls.animating .control-group input[type="range"] {
     opacity: 0.35;
     pointer-events: none;
 }

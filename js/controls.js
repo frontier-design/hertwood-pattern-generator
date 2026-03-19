@@ -13,7 +13,11 @@ var Controls = (function () {
         radius: document.getElementById('radius'),
         offsetX: document.getElementById('offsetX'),
         offsetY: document.getElementById('offsetY'),
-        rotation: document.getElementById('rotation')
+        rotation: document.getElementById('rotation'),
+        layerSpread: document.getElementById('layerSpread'),
+        camTheta: document.getElementById('camTheta'),
+        camPhi: document.getElementById('camPhi'),
+        camZoom: document.getElementById('camZoom')
     };
 
     var labels = {
@@ -30,7 +34,11 @@ var Controls = (function () {
         radius: document.getElementById('radiusVal'),
         offsetX: document.getElementById('offsetXVal'),
         offsetY: document.getElementById('offsetYVal'),
-        rotation: document.getElementById('rotationVal')
+        rotation: document.getElementById('rotationVal'),
+        layerSpread: document.getElementById('layerSpreadVal'),
+        camTheta: document.getElementById('camThetaVal'),
+        camPhi: document.getElementById('camPhiVal'),
+        camZoom: document.getElementById('camZoomVal')
     };
 
     var colorInputs = {
@@ -53,6 +61,10 @@ var Controls = (function () {
         offsetX: 0,
         offsetY: 0,
         rotation: 0,
+        layerSpread: 0,
+        camTheta: 0,
+        camPhi: 31,
+        camZoom: 583,
         strokeColor: '#000000',
         bgColor: '#ffffff'
     };
@@ -72,6 +84,10 @@ var Controls = (function () {
         params.offsetX = parseInt(sliders.offsetX.value);
         params.offsetY = parseInt(sliders.offsetY.value);
         params.rotation = parseInt(sliders.rotation.value);
+        params.layerSpread = parseInt(sliders.layerSpread.value);
+        params.camTheta = parseInt(sliders.camTheta.value);
+        params.camPhi = parseInt(sliders.camPhi.value);
+        params.camZoom = parseInt(sliders.camZoom.value);
         params.strokeColor = colorInputs.strokeColor.value;
         params.bgColor = colorInputs.bgColor.value;
 
@@ -89,6 +105,10 @@ var Controls = (function () {
         labels.offsetX.textContent = params.offsetX;
         labels.offsetY.textContent = params.offsetY;
         labels.rotation.textContent = params.rotation;
+        labels.layerSpread.textContent = params.layerSpread;
+        labels.camTheta.textContent = params.camTheta;
+        labels.camPhi.textContent = params.camPhi;
+        labels.camZoom.textContent = params.camZoom;
 
         document.body.style.background = params.bgColor;
     }
@@ -123,8 +143,12 @@ var Controls = (function () {
         params.offsetX = p.offsetX;
         params.offsetY = p.offsetY;
         params.rotation = p.rotation;
-        params.strokeColor = p.strokeColor;
-        params.bgColor = p.bgColor;
+        params.layerSpread = p.layerSpread;
+        params.camTheta = p.camTheta;
+        params.camPhi = p.camPhi;
+        params.camZoom = p.camZoom;
+        if (p.strokeColor !== undefined) params.strokeColor = p.strokeColor;
+        if (p.bgColor !== undefined) params.bgColor = p.bgColor;
 
         sliders.ringCount.value = p.ringCount;
         sliders.spokeCount.value = p.spokeCount;
@@ -140,8 +164,12 @@ var Controls = (function () {
         sliders.offsetX.value = p.offsetX;
         sliders.offsetY.value = p.offsetY;
         sliders.rotation.value = p.rotation;
-        colorInputs.strokeColor.value = p.strokeColor;
-        colorInputs.bgColor.value = p.bgColor;
+        sliders.layerSpread.value = p.layerSpread;
+        sliders.camTheta.value = p.camTheta;
+        sliders.camPhi.value = p.camPhi;
+        sliders.camZoom.value = p.camZoom;
+        if (p.strokeColor !== undefined) colorInputs.strokeColor.value = p.strokeColor;
+        if (p.bgColor !== undefined) colorInputs.bgColor.value = p.bgColor;
 
         labels.ringCount.textContent = p.ringCount;
         labels.spokeCount.textContent = p.spokeCount;
@@ -157,8 +185,12 @@ var Controls = (function () {
         labels.offsetX.textContent = p.offsetX;
         labels.offsetY.textContent = p.offsetY;
         labels.rotation.textContent = p.rotation;
+        labels.layerSpread.textContent = p.layerSpread;
+        labels.camTheta.textContent = p.camTheta;
+        labels.camPhi.textContent = p.camPhi;
+        labels.camZoom.textContent = p.camZoom;
 
-        document.body.style.background = p.bgColor;
+        document.body.style.background = params.bgColor;
     }
 
     return {

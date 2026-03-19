@@ -1,9 +1,5 @@
-document.fonts.load('800 16px "GT Flexa Wide"').then(function () {
-    var canvas = document.getElementById('canvas');
-    paper.setup(canvas);
-
-    var params = Controls.params;
-
+// Shared ring computation — used by both 2D and 3D renderers
+window.computeRings = function (params, viewWidth, viewHeight) {
     function pseudoRandom(n) {
         var x = Math.sin(params.seed + n * 127.1) * 43758.5453;
         return x - Math.floor(x);
@@ -19,7 +15,61 @@ document.fonts.load('800 16px "GT Flexa Wide"').then(function () {
         return w * params.wobble / 0.3;
     }
 
-    function draw() {
+    var maxRadius = Math.min(viewWidth, viewHeight) * (params.radius / 100);
+    var ringSpacing = maxRadius / params.ringCount;
+    var segs = Math.max(6, params.segments);
+    var rotRad = params.rotation * Math.PI / 180;
+
+    var ringRadii = [];
+    for (var i = 0; i < params.ringCount; i++) {
+        ringRadii.push([]);
+        var baseRadius = (i + 1) * ringSpacing;
+        for (var s = 0; s < segs; s++) {
+            var angle = (s / segs) * Math.PI * 2;
+            var offset = rawWobble(i + 1, s, angle) * ringSpacing;
+            ringRadii[i].push(baseRadius + offset);
+        }
+    }
+
+    var minGap = ringSpacing * (params.ringGap / 100);
+    for (var s = 0; s < segs; s++) {
+        for (var i = 1; i < params.ringCount; i++) {
+            var floor = ringRadii[i - 1][s] + minGap;
+            if (ringRadii[i][s] < floor) {
+                ringRadii[i][s] = floor;
+            }
+        }
+        for (var i = params.ringCount - 2; i >= 0; i--) {
+            var ceil = ringRadii[i + 1][s] - minGap;
+            if (ringRadii[i][s] > ceil) {
+                ringRadii[i][s] = ceil;
+            }
+        }
+        if (ringRadii[0][s] < minGap) {
+            ringRadii[0][s] = minGap;
+        }
+    }
+
+    return {
+        ringRadii: ringRadii,
+        maxRadius: maxRadius,
+        ringSpacing: ringSpacing,
+        segs: segs,
+        rotRad: rotRad
+    };
+};
+
+// View mode
+window.viewMode = '2d';
+
+// 2D Paper.js renderer
+document.fonts.load('800 16px "GT Flexa Wide"').then(function () {
+    var canvas = document.getElementById('canvas');
+    paper.setup(canvas);
+
+    var params = Controls.params;
+
+    function draw2d() {
         paper.project.clear();
 
         var viewCenter = paper.view.center;
@@ -27,42 +77,12 @@ document.fonts.load('800 16px "GT Flexa Wide"').then(function () {
             viewCenter.x + params.offsetX * paper.view.size.width / 100,
             viewCenter.y + params.offsetY * paper.view.size.height / 100
         );
-        var maxRadius = Math.min(paper.view.size.width, paper.view.size.height) * (params.radius / 100);
-        var ringSpacing = maxRadius / params.ringCount;
-        var segs = Math.max(6, params.segments);
-        var rotRad = params.rotation * Math.PI / 180;
 
-        // Pre-compute ring radii per segment
-        var ringRadii = [];
-        for (var i = 0; i < params.ringCount; i++) {
-            ringRadii.push([]);
-            var baseRadius = (i + 1) * ringSpacing;
-            for (var s = 0; s < segs; s++) {
-                var angle = (s / segs) * Math.PI * 2;
-                var offset = rawWobble(i + 1, s, angle) * ringSpacing;
-                ringRadii[i].push(baseRadius + offset);
-            }
-        }
-
-        // Clamp to prevent crossing — ringGap controls minimum distance between rings
-        var minGap = ringSpacing * (params.ringGap / 100);
-        for (var s = 0; s < segs; s++) {
-            for (var i = 1; i < params.ringCount; i++) {
-                var floor = ringRadii[i - 1][s] + minGap;
-                if (ringRadii[i][s] < floor) {
-                    ringRadii[i][s] = floor;
-                }
-            }
-            for (var i = params.ringCount - 2; i >= 0; i--) {
-                var ceil = ringRadii[i + 1][s] - minGap;
-                if (ringRadii[i][s] > ceil) {
-                    ringRadii[i][s] = ceil;
-                }
-            }
-            if (ringRadii[0][s] < minGap) {
-                ringRadii[0][s] = minGap;
-            }
-        }
+        var data = window.computeRings(params, paper.view.size.width, paper.view.size.height);
+        var ringRadii = data.ringRadii;
+        var maxRadius = data.maxRadius;
+        var segs = data.segs;
+        var rotRad = data.rotRad;
 
         // Draw rings
         for (var i = 0; i < params.ringCount; i++) {
@@ -126,25 +146,33 @@ document.fonts.load('800 16px "GT Flexa Wide"').then(function () {
         }
     }
 
-    window.draw = draw;
-    Controls.onChange(draw);
-    draw();
+    window.draw2d = draw2d;
 
-    paper.view.onResize = function () {
-        draw();
+    // Routing draw function
+    window.draw = function () {
+        if (window.viewMode === '3d' && typeof window.draw3d === 'function') {
+            window.draw3d();
+        } else {
+            draw2d();
+        }
     };
 
+    Controls.onChange(window.draw);
+    window.draw();
+
+    paper.view.onResize = function () {
+        window.draw();
+    };
 });
 
-// Keyboard shortcuts — outside font callback so they always work
+// Keyboard shortcuts
 document.addEventListener('keydown', function (e) {
     if (e.metaKey || e.ctrlKey) return;
     var tag = e.target.tagName;
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
 
-    var canvas = document.getElementById('canvas');
-
     if (e.key === 'a') {
+        if (window.viewMode === '3d') return; // SVG export not available in 3D
         if (paper.project) {
             var svg = paper.project.exportSVG({ asString: true });
             var blob = new Blob([svg], { type: 'image/svg+xml' });
@@ -155,11 +183,21 @@ document.addEventListener('keydown', function (e) {
             URL.revokeObjectURL(link.href);
         }
     } else if (e.key === 's') {
-        if (canvas) {
+        var srcCanvas;
+        if (window.viewMode === '3d') {
+            srcCanvas = document.getElementById('canvas3d');
+        } else {
+            srcCanvas = document.getElementById('canvas');
+        }
+        if (srcCanvas) {
             var link = document.createElement('a');
             link.download = 'radial-grid.png';
-            link.href = canvas.toDataURL('image/png');
+            link.href = srcCanvas.toDataURL('image/png');
             link.click();
+        }
+    } else if (e.key === 'v') {
+        if (typeof window.toggleViewMode === 'function') {
+            window.toggleViewMode();
         }
     }
 });
