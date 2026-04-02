@@ -88,26 +88,47 @@ var Animator = (function () {
         );
     }
 
+    function safeLerp(from, to, key, t, fallback) {
+        var a = from[key] !== undefined ? from[key] : fallback;
+        var b = to[key] !== undefined ? to[key] : fallback;
+        return lerp(a, b, t);
+    }
+
+    // Static defaults — never changes, used as fallback for missing state keys
+    var defaults = {
+        ringCount: 7, spokeCount: 0, strokeWidth: 0.8, dotSize: 1.5,
+        segments: 72, ringGap: 8, wobble: 0.3, seed: 42,
+        frequency: 1.0, noise: 0.3, wobbleFalloff: 50, coherence: 0,
+        radius: 45, offsetX: 0, offsetY: 0, rotation: 0,
+        layerSpread: 0, flatten: 0, linearize: 0,
+        camTheta: 0, camPhi: 31, camZoom: 583, camFov: 50
+    };
+
     function interpolateParams(from, to, t) {
         return {
-            ringCount: Math.round(lerp(from.ringCount, to.ringCount, t)),
-            spokeCount: Math.round(lerp(from.spokeCount, to.spokeCount, t)),
-            strokeWidth: lerp(from.strokeWidth, to.strokeWidth, t),
-            dotSize: lerp(from.dotSize, to.dotSize, t),
-            segments: Math.round(lerp(from.segments, to.segments, t)),
-            ringGap: Math.round(lerp(from.ringGap, to.ringGap, t)),
-            wobble: lerp(from.wobble, to.wobble, t),
-            seed: Math.round(lerp(from.seed, to.seed, t)),
-            frequency: lerp(from.frequency, to.frequency, t),
-            noise: lerp(from.noise, to.noise, t),
-            radius: lerp(from.radius, to.radius, t),
-            offsetX: lerp(from.offsetX, to.offsetX, t),
-            offsetY: lerp(from.offsetY, to.offsetY, t),
-            rotation: lerp(from.rotation, to.rotation, t),
-            layerSpread: lerp(from.layerSpread, to.layerSpread, t),
-            camTheta: lerp(from.camTheta, to.camTheta, t),
-            camPhi: lerp(from.camPhi, to.camPhi, t),
-            camZoom: lerp(from.camZoom, to.camZoom, t),
+            ringCount: Math.round(safeLerp(from, to, 'ringCount', t, defaults.ringCount)),
+            spokeCount: Math.round(safeLerp(from, to, 'spokeCount', t, defaults.spokeCount)),
+            strokeWidth: safeLerp(from, to, 'strokeWidth', t, defaults.strokeWidth),
+            dotSize: safeLerp(from, to, 'dotSize', t, defaults.dotSize),
+            segments: Math.round(safeLerp(from, to, 'segments', t, defaults.segments)),
+            ringGap: Math.round(safeLerp(from, to, 'ringGap', t, defaults.ringGap)),
+            wobble: safeLerp(from, to, 'wobble', t, defaults.wobble),
+            seed: Math.round(safeLerp(from, to, 'seed', t, defaults.seed)),
+            frequency: safeLerp(from, to, 'frequency', t, defaults.frequency),
+            noise: safeLerp(from, to, 'noise', t, defaults.noise),
+            wobbleFalloff: safeLerp(from, to, 'wobbleFalloff', t, defaults.wobbleFalloff),
+            coherence: safeLerp(from, to, 'coherence', t, defaults.coherence),
+            radius: safeLerp(from, to, 'radius', t, defaults.radius),
+            offsetX: safeLerp(from, to, 'offsetX', t, defaults.offsetX),
+            offsetY: safeLerp(from, to, 'offsetY', t, defaults.offsetY),
+            rotation: safeLerp(from, to, 'rotation', t, defaults.rotation),
+            layerSpread: safeLerp(from, to, 'layerSpread', t, defaults.layerSpread),
+            flatten: safeLerp(from, to, 'flatten', t, defaults.flatten),
+            linearize: safeLerp(from, to, 'linearize', t, defaults.linearize),
+            camTheta: safeLerp(from, to, 'camTheta', t, defaults.camTheta),
+            camPhi: safeLerp(from, to, 'camPhi', t, defaults.camPhi),
+            camZoom: safeLerp(from, to, 'camZoom', t, defaults.camZoom),
+            camFov: safeLerp(from, to, 'camFov', t, defaults.camFov),
             strokeColor: Controls.params.strokeColor,
             bgColor: Controls.params.bgColor
         };
@@ -126,14 +147,19 @@ var Animator = (function () {
             seed: p.seed,
             frequency: p.frequency,
             noise: p.noise,
+            wobbleFalloff: p.wobbleFalloff,
+            coherence: p.coherence,
             radius: p.radius,
             offsetX: p.offsetX,
             offsetY: p.offsetY,
             rotation: p.rotation,
             layerSpread: p.layerSpread,
+            flatten: p.flatten,
+            linearize: p.linearize,
             camTheta: p.camTheta,
             camPhi: p.camPhi,
-            camZoom: p.camZoom
+            camZoom: p.camZoom,
+            camFov: p.camFov
         });
         activeStateIndex = states.length - 1;
         renderStates();
@@ -143,7 +169,11 @@ var Animator = (function () {
     function jumpToState(index) {
         if (playing) pause();
         Controls.applyParams(states[index]);
-        if (typeof window.draw === 'function') window.draw();
+        if (window.viewMode === '3d' && typeof window.draw3d === 'function') {
+            window.draw3d();
+        } else if (typeof window.draw === 'function') {
+            window.draw();
+        }
         activeStateIndex = index;
         renderStates();
     }
@@ -198,7 +228,11 @@ var Animator = (function () {
             if (elapsed >= totalDur) {
                 elapsed = totalDur;
                 Controls.applyParams(states[n - 1]);
-                if (typeof window.draw === 'function') window.draw();
+                if (window.viewMode === '3d' && typeof window.draw3d === 'function') {
+                    window.draw3d();
+                } else if (typeof window.draw === 'function') {
+                    window.draw();
+                }
                 pause();
                 return;
             }
@@ -219,7 +253,11 @@ var Animator = (function () {
         var interpolated = interpolateParams(states[fromIdx], states[toIdx], easedT);
 
         Controls.applyParams(interpolated);
-        if (typeof window.draw === 'function') window.draw();
+        if (window.viewMode === '3d' && typeof window.draw3d === 'function') {
+            window.draw3d();
+        } else if (typeof window.draw === 'function') {
+            window.draw();
+        }
 
         if (fromIdx !== currentSegment) {
             currentSegment = fromIdx;

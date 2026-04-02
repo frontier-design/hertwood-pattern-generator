@@ -3,13 +3,15 @@ import { Scene3D, THREE } from './scene3d.js';
 import { ViewCube } from './viewcube.js';
 
 (function () {
-    function draw3d() {
+    function rebuildGeometry() {
         if (!Scene3D.initialized) return;
 
         var params = Controls.params;
         var w = window.innerWidth;
         var h = window.innerHeight;
+        if (!w || !h) return;
         var data = window.computeRings(params, w, h);
+        if (!data) return;
         var ringRadii = data.ringRadii;
         var maxRadius = data.maxRadius;
         var segs = data.segs;
@@ -18,36 +20,66 @@ import { ViewCube } from './viewcube.js';
 
         Scene3D.scene.background = new THREE.Color(params.bgColor);
 
-        // Clear previous geometry
-        var group = Scene3D.ringGroup;
-        while (group.children.length > 0) {
-            var child = group.children[0];
-            group.remove(child);
-            if (child.geometry) child.geometry.dispose();
-            if (child.material) child.material.dispose();
-        }
+        // Replace the ring group entirely to avoid disposal issues
+        var oldGroup = Scene3D.ringGroup;
+        Scene3D.scene.remove(oldGroup);
+        var group = new THREE.Group();
+        Scene3D.ringGroup = group;
+        Scene3D.scene.add(group);
+
+        // Dispose old geometry in next frame to avoid render conflicts
+        setTimeout(function () {
+            for (var c = oldGroup.children.length - 1; c >= 0; c--) {
+                var child = oldGroup.children[c];
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) child.material.dispose();
+            }
+        }, 0);
 
         var strokeColor = new THREE.Color(params.strokeColor);
         var tubeRadius = Math.max(0.3, params.strokeWidth * 0.8);
+
+        // Linearize: 0 = circles, 100 = straight horizontal lines
+        var lin = (params.linearize || 0) / 100;
 
         // Rings
         for (var i = 0; i < params.ringCount; i++) {
             var curvePoints = [];
             var yPos = i * layerSpread;
+            var isClosed = lin < 0.99;
 
             for (var s = 0; s <= segs; s++) {
                 var idx = s % segs;
                 var angle = (s / segs) * Math.PI * 2 + rotRad;
                 var r = ringRadii[i][idx];
-                curvePoints.push(new THREE.Vector3(
-                    Math.cos(angle) * r, yPos, Math.sin(angle) * r
-                ));
+
+                // Circle position
+                var cx = Math.cos(angle) * r;
+                var cz = Math.sin(angle) * r;
+
+                // Line position: unroll angle to x, z goes to 0
+                var lx = ((s / segs) - 0.5) * maxRadius * 2;
+                var lz = 0;
+
+                // Blend
+                var px = cx + (lx - cx) * lin;
+                var pz = cz + (lz - cz) * lin;
+
+                curvePoints.push(new THREE.Vector3(px, yPos, pz));
             }
 
-            var curve = new THREE.CatmullRomCurve3(curvePoints, true, 'centripetal', 0.5);
-            var tubeGeo = new THREE.TubeGeometry(curve, segs * 2, tubeRadius, 6, true);
-            var mat = new THREE.MeshBasicMaterial({ color: strokeColor });
-            group.add(new THREE.Mesh(tubeGeo, mat));
+            if (lin < 0.99) {
+                var curve = new THREE.CatmullRomCurve3(curvePoints, true, 'centripetal', 0.5);
+                var tubeGeo = new THREE.TubeGeometry(curve, segs * 2, tubeRadius, 6, true);
+                var mat = new THREE.MeshBasicMaterial({ color: strokeColor });
+                group.add(new THREE.Mesh(tubeGeo, mat));
+            } else {
+                // Open line — use CatmullRomCurve3 but not closed
+                var curve = new THREE.CatmullRomCurve3(curvePoints, false, 'centripetal', 0.5);
+                var tubeGeo = new THREE.TubeGeometry(curve, segs * 2, tubeRadius, 6, false);
+                var mat = new THREE.MeshBasicMaterial({ color: strokeColor });
+                group.add(new THREE.Mesh(tubeGeo, mat));
+            }
         }
 
         // Spokes
@@ -90,8 +122,11 @@ import { ViewCube } from './viewcube.js';
 
         // Center vertically
         group.position.y = -((params.ringCount - 1) * layerSpread) / 2;
+    }
 
-        // Apply camera from params
+    function draw3d() {
+        if (!Scene3D.initialized) return;
+        rebuildGeometry();
         Scene3D.applyCameraFromParams();
         Scene3D.render();
         ViewCube.update();

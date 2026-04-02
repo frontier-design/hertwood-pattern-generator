@@ -87,7 +87,11 @@ var Scene3D = {
             THREE.MathUtils.degToRad(params.camTheta)
         );
         this.camera.position.setFromSpherical(spherical);
+        this.camera.fov = params.camFov;
+        this.camera.updateProjectionMatrix();
         this.camera.lookAt(0, 0, 0);
+        // Reset OrbitControls so it doesn't fight the new position
+        this.controls.target.set(0, 0, 0);
         this.controls.update();
     },
 

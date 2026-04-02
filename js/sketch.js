@@ -7,11 +7,16 @@ window.computeRings = function (params, viewWidth, viewHeight) {
 
     function rawWobble(ringIndex, segIndex, angle) {
         var freq = params.frequency;
+        // Coherence: 0 = each ring independent, 100 = all rings share same shape
+        var coh = (params.coherence || 0) / 100;
+        var ri = ringIndex * (1 - coh); // blend ringIndex toward 0
         var w = 0;
-        w += Math.sin(angle * 3 * freq + ringIndex * 0.7) * 0.08;
-        w += Math.sin(angle * 7 * freq - ringIndex * 1.3) * 0.04;
-        w += Math.sin(angle * 13 * freq + ringIndex * 2.1) * 0.02;
-        w += (pseudoRandom(ringIndex * 100 + segIndex) - 0.5) * 0.03 * (params.noise / 0.3);
+        w += Math.sin(angle * 3 * freq + ri * 0.7) * 0.08;
+        w += Math.sin(angle * 7 * freq - ri * 1.3) * 0.04;
+        w += Math.sin(angle * 13 * freq + ri * 2.1) * 0.02;
+        // Noise also blends toward shared (segIndex only, no ringIndex variation)
+        var noiseIdx = coh > 0.99 ? segIndex : ringIndex * 100 + segIndex;
+        w += (pseudoRandom(noiseIdx) - 0.5) * 0.03 * (params.noise / 0.3);
         return w * params.wobble / 0.3;
     }
 
@@ -20,14 +25,23 @@ window.computeRings = function (params, viewWidth, viewHeight) {
     var segs = Math.max(6, params.segments);
     var rotRad = params.rotation * Math.PI / 180;
 
+    // Flatten: 0 = normal (each ring at its own radius), 100 = all rings same radius
+    var flatten = (params.flatten || 0) / 100;
+
     var ringRadii = [];
     for (var i = 0; i < params.ringCount; i++) {
         ringRadii.push([]);
         var baseRadius = (i + 1) * ringSpacing;
+        // Blend toward maxRadius so all rings converge to same size
+        var flatRadius = baseRadius + (maxRadius - baseRadius) * flatten;
+        // Wobble falloff: 0 = uniform wobble, 100 = only outer rings wobble
+        var ringT = (i + 1) / params.ringCount;
+        var falloff = (params.wobbleFalloff || 0) / 100;
+        var wobbleScale = (1 - falloff) + falloff * ringT;
         for (var s = 0; s < segs; s++) {
             var angle = (s / segs) * Math.PI * 2;
-            var offset = rawWobble(i + 1, s, angle) * ringSpacing;
-            ringRadii[i].push(baseRadius + offset);
+            var offset = rawWobble(i + 1, s, angle) * flatRadius * wobbleScale;
+            ringRadii[i].push(flatRadius + offset);
         }
     }
 
@@ -172,28 +186,36 @@ document.addEventListener('keydown', function (e) {
     if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
 
     if (e.key === 'a') {
-        if (window.viewMode === '3d') return; // SVG export not available in 3D
-        if (paper.project) {
-            var svg = paper.project.exportSVG({ asString: true });
-            var blob = new Blob([svg], { type: 'image/svg+xml' });
-            var link = document.createElement('a');
-            link.download = 'radial-grid.svg';
-            link.href = URL.createObjectURL(blob);
-            link.click();
-            URL.revokeObjectURL(link.href);
+        if (window.viewMode === '3d') return;
+        try {
+            if (paper.project) {
+                var svg = paper.project.exportSVG({ asString: true });
+                var blob = new Blob([svg], { type: 'image/svg+xml' });
+                var link = document.createElement('a');
+                link.download = 'radial-grid.svg';
+                link.href = URL.createObjectURL(blob);
+                link.click();
+                URL.revokeObjectURL(link.href);
+            }
+        } catch (err) {
+            console.error('SVG export failed:', err);
         }
     } else if (e.key === 's') {
-        var srcCanvas;
-        if (window.viewMode === '3d') {
-            srcCanvas = document.getElementById('canvas3d');
-        } else {
-            srcCanvas = document.getElementById('canvas');
-        }
-        if (srcCanvas) {
-            var link = document.createElement('a');
-            link.download = 'radial-grid.png';
-            link.href = srcCanvas.toDataURL('image/png');
-            link.click();
+        try {
+            var srcCanvas;
+            if (window.viewMode === '3d') {
+                srcCanvas = document.getElementById('canvas3d');
+            } else {
+                srcCanvas = document.getElementById('canvas');
+            }
+            if (srcCanvas) {
+                var link = document.createElement('a');
+                link.download = 'radial-grid.png';
+                link.href = srcCanvas.toDataURL('image/png');
+                link.click();
+            }
+        } catch (err) {
+            console.error('PNG export failed:', err);
         }
     } else if (e.key === 'v') {
         if (typeof window.toggleViewMode === 'function') {

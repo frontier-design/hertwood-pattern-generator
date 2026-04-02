@@ -10,14 +10,19 @@ var Controls = (function () {
         seed: document.getElementById('seed'),
         frequency: document.getElementById('frequency'),
         noise: document.getElementById('noise'),
+        wobbleFalloff: document.getElementById('wobbleFalloff'),
+        coherence: document.getElementById('coherence'),
         radius: document.getElementById('radius'),
         offsetX: document.getElementById('offsetX'),
         offsetY: document.getElementById('offsetY'),
         rotation: document.getElementById('rotation'),
         layerSpread: document.getElementById('layerSpread'),
+        flatten: document.getElementById('flatten'),
+        linearize: document.getElementById('linearize'),
         camTheta: document.getElementById('camTheta'),
         camPhi: document.getElementById('camPhi'),
-        camZoom: document.getElementById('camZoom')
+        camZoom: document.getElementById('camZoom'),
+        camFov: document.getElementById('camFov')
     };
 
     var labels = {
@@ -31,14 +36,19 @@ var Controls = (function () {
         seed: document.getElementById('seedVal'),
         frequency: document.getElementById('frequencyVal'),
         noise: document.getElementById('noiseVal'),
+        wobbleFalloff: document.getElementById('wobbleFalloffVal'),
+        coherence: document.getElementById('coherenceVal'),
         radius: document.getElementById('radiusVal'),
         offsetX: document.getElementById('offsetXVal'),
         offsetY: document.getElementById('offsetYVal'),
         rotation: document.getElementById('rotationVal'),
         layerSpread: document.getElementById('layerSpreadVal'),
+        flatten: document.getElementById('flattenVal'),
+        linearize: document.getElementById('linearizeVal'),
         camTheta: document.getElementById('camThetaVal'),
         camPhi: document.getElementById('camPhiVal'),
-        camZoom: document.getElementById('camZoomVal')
+        camZoom: document.getElementById('camZoomVal'),
+        camFov: document.getElementById('camFovVal')
     };
 
     var colorInputs = {
@@ -57,58 +67,60 @@ var Controls = (function () {
         seed: 42,
         frequency: 1.0,
         noise: 0.3,
+        wobbleFalloff: 50,
+        coherence: 0,
         radius: 45,
         offsetX: 0,
         offsetY: 0,
         rotation: 0,
         layerSpread: 0,
+        flatten: 0,
+        linearize: 0,
         camTheta: 0,
         camPhi: 31,
         camZoom: 583,
+        camFov: 50,
         strokeColor: '#000000',
         bgColor: '#ffffff'
     };
 
+    // Slider-to-param conversion rules
+    var sliderToParam = {
+        strokeWidth: function (v) { return parseInt(v) / 10; },
+        dotSize: function (v) { return parseInt(v) / 10; },
+        wobble: function (v) { return parseInt(v) / 100; },
+        frequency: function (v) { return parseInt(v) / 100; },
+        noise: function (v) { return parseInt(v) / 100; }
+    };
+
+    var paramToSlider = {
+        strokeWidth: function (v) { return Math.round(v * 10); },
+        dotSize: function (v) { return Math.round(v * 10); },
+        wobble: function (v) { return Math.round(v * 100); },
+        frequency: function (v) { return Math.round(v * 100); },
+        noise: function (v) { return Math.round(v * 100); }
+    };
+
+    var paramToLabel = {
+        strokeWidth: function (v) { return v.toFixed(1); },
+        dotSize: function (v) { return v.toFixed(1); },
+        frequency: function (v) { return v.toFixed(1); },
+        wobble: function (v) { return Math.round(v * 100); },
+        noise: function (v) { return Math.round(v * 100); }
+    };
+
     function read() {
-        params.ringCount = parseInt(sliders.ringCount.value);
-        params.spokeCount = parseInt(sliders.spokeCount.value);
-        params.strokeWidth = parseInt(sliders.strokeWidth.value) / 10;
-        params.dotSize = parseInt(sliders.dotSize.value) / 10;
-        params.segments = parseInt(sliders.segments.value);
-        params.ringGap = parseInt(sliders.ringGap.value);
-        params.wobble = parseInt(sliders.wobble.value) / 100;
-        params.seed = parseInt(sliders.seed.value);
-        params.frequency = parseInt(sliders.frequency.value) / 100;
-        params.noise = parseInt(sliders.noise.value) / 100;
-        params.radius = parseInt(sliders.radius.value);
-        params.offsetX = parseInt(sliders.offsetX.value);
-        params.offsetY = parseInt(sliders.offsetY.value);
-        params.rotation = parseInt(sliders.rotation.value);
-        params.layerSpread = parseInt(sliders.layerSpread.value);
-        params.camTheta = parseInt(sliders.camTheta.value);
-        params.camPhi = parseInt(sliders.camPhi.value);
-        params.camZoom = parseInt(sliders.camZoom.value);
+        Object.keys(sliders).forEach(function (key) {
+            var conv = sliderToParam[key];
+            params[key] = conv ? conv(sliders[key].value) : parseInt(sliders[key].value);
+        });
         params.strokeColor = colorInputs.strokeColor.value;
         params.bgColor = colorInputs.bgColor.value;
 
-        labels.ringCount.textContent = params.ringCount;
-        labels.spokeCount.textContent = params.spokeCount;
-        labels.strokeWidth.textContent = params.strokeWidth.toFixed(1);
-        labels.dotSize.textContent = params.dotSize.toFixed(1);
-        labels.segments.textContent = params.segments;
-        labels.ringGap.textContent = params.ringGap;
-        labels.wobble.textContent = sliders.wobble.value;
-        labels.seed.textContent = params.seed;
-        labels.frequency.textContent = params.frequency.toFixed(1);
-        labels.noise.textContent = sliders.noise.value;
-        labels.radius.textContent = params.radius;
-        labels.offsetX.textContent = params.offsetX;
-        labels.offsetY.textContent = params.offsetY;
-        labels.rotation.textContent = params.rotation;
-        labels.layerSpread.textContent = params.layerSpread;
-        labels.camTheta.textContent = params.camTheta;
-        labels.camPhi.textContent = params.camPhi;
-        labels.camZoom.textContent = params.camZoom;
+        Object.keys(labels).forEach(function (key) {
+            var fmt = paramToLabel[key];
+            labels[key].textContent = fmt ? fmt(params[key]) : params[key];
+        });
 
         document.body.style.background = params.bgColor;
     }
@@ -129,66 +141,26 @@ var Controls = (function () {
     }
 
     function applyParams(p) {
-        params.ringCount = p.ringCount;
-        params.spokeCount = p.spokeCount;
-        params.strokeWidth = p.strokeWidth;
-        params.dotSize = p.dotSize;
-        params.segments = p.segments;
-        params.ringGap = p.ringGap;
-        params.wobble = p.wobble;
-        params.seed = p.seed;
-        params.frequency = p.frequency;
-        params.noise = p.noise;
-        params.radius = p.radius;
-        params.offsetX = p.offsetX;
-        params.offsetY = p.offsetY;
-        params.rotation = p.rotation;
-        params.layerSpread = p.layerSpread;
-        params.camTheta = p.camTheta;
-        params.camPhi = p.camPhi;
-        params.camZoom = p.camZoom;
-        if (p.strokeColor !== undefined) params.strokeColor = p.strokeColor;
-        if (p.bgColor !== undefined) params.bgColor = p.bgColor;
+        // Only overwrite params that exist in p — missing keys keep current value
+        Object.keys(params).forEach(function (key) {
+            if (p[key] !== undefined) {
+                params[key] = p[key];
+            }
+        });
 
-        sliders.ringCount.value = p.ringCount;
-        sliders.spokeCount.value = p.spokeCount;
-        sliders.strokeWidth.value = Math.round(p.strokeWidth * 10);
-        sliders.dotSize.value = Math.round(p.dotSize * 10);
-        sliders.segments.value = p.segments;
-        sliders.ringGap.value = p.ringGap;
-        sliders.wobble.value = Math.round(p.wobble * 100);
-        sliders.seed.value = p.seed;
-        sliders.frequency.value = Math.round(p.frequency * 100);
-        sliders.noise.value = Math.round(p.noise * 100);
-        sliders.radius.value = p.radius;
-        sliders.offsetX.value = p.offsetX;
-        sliders.offsetY.value = p.offsetY;
-        sliders.rotation.value = p.rotation;
-        sliders.layerSpread.value = p.layerSpread;
-        sliders.camTheta.value = p.camTheta;
-        sliders.camPhi.value = p.camPhi;
-        sliders.camZoom.value = p.camZoom;
-        if (p.strokeColor !== undefined) colorInputs.strokeColor.value = p.strokeColor;
-        if (p.bgColor !== undefined) colorInputs.bgColor.value = p.bgColor;
+        // Sync sliders
+        Object.keys(sliders).forEach(function (key) {
+            var conv = paramToSlider[key];
+            sliders[key].value = conv ? conv(params[key]) : params[key];
+        });
+        colorInputs.strokeColor.value = params.strokeColor;
+        colorInputs.bgColor.value = params.bgColor;
 
-        labels.ringCount.textContent = p.ringCount;
-        labels.spokeCount.textContent = p.spokeCount;
-        labels.strokeWidth.textContent = p.strokeWidth.toFixed(1);
-        labels.dotSize.textContent = p.dotSize.toFixed(1);
-        labels.segments.textContent = p.segments;
-        labels.ringGap.textContent = p.ringGap;
-        labels.wobble.textContent = Math.round(p.wobble * 100);
-        labels.seed.textContent = p.seed;
-        labels.frequency.textContent = p.frequency.toFixed(1);
-        labels.noise.textContent = Math.round(p.noise * 100);
-        labels.radius.textContent = p.radius;
-        labels.offsetX.textContent = p.offsetX;
-        labels.offsetY.textContent = p.offsetY;
-        labels.rotation.textContent = p.rotation;
-        labels.layerSpread.textContent = p.layerSpread;
-        labels.camTheta.textContent = p.camTheta;
-        labels.camPhi.textContent = p.camPhi;
-        labels.camZoom.textContent = p.camZoom;
+        // Sync labels
+        Object.keys(labels).forEach(function (key) {
+            var fmt = paramToLabel[key];
+            labels[key].textContent = fmt ? fmt(params[key]) : params[key];
+        });
 
         document.body.style.background = params.bgColor;
     }

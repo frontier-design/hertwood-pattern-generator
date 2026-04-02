@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radial Grid</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="./assets/heartwood-ico.svg">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.18/paper-full.min.js"></script>
     <script type="importmap">
     {
@@ -15,6 +17,7 @@
     }
     </script>
 </head>
+
 <body>
     <button id="toggle-controls" title="Toggle controls">&#x2630;</button>
     <div id="shortcuts-wrap">
@@ -84,6 +87,16 @@
                 <input type="range" id="noise" min="0" max="100" value="30">
                 <span id="noiseVal">30</span>
             </div>
+            <div class="control-group">
+                <label for="wobbleFalloff">Falloff</label>
+                <input type="range" id="wobbleFalloff" min="0" max="100" value="50">
+                <span id="wobbleFalloffVal">50</span>
+            </div>
+            <div class="control-group">
+                <label for="coherence">Coherence</label>
+                <input type="range" id="coherence" min="0" max="100" value="0">
+                <span id="coherenceVal">0</span>
+            </div>
         </details>
         <div class="control-divider"></div>
         <details class="control-details">
@@ -118,6 +131,16 @@
                 <span id="layerSpreadVal">0</span>
             </div>
             <div class="control-group">
+                <label for="flatten">Flatten</label>
+                <input type="range" id="flatten" min="0" max="100" value="0">
+                <span id="flattenVal">0</span>
+            </div>
+            <div class="control-group">
+                <label for="linearize">Linearize</label>
+                <input type="range" id="linearize" min="0" max="100" value="0">
+                <span id="linearizeVal">0</span>
+            </div>
+            <div class="control-group">
                 <label for="camTheta">Cam Angle</label>
                 <input type="range" id="camTheta" min="-180" max="180" value="0">
                 <span id="camThetaVal">0</span>
@@ -131,6 +154,11 @@
                 <label for="camZoom">Cam Zoom</label>
                 <input type="range" id="camZoom" min="100" max="2000" value="583">
                 <span id="camZoomVal">583</span>
+            </div>
+            <div class="control-group">
+                <label for="camFov">FOV</label>
+                <input type="range" id="camFov" min="5" max="120" value="50">
+                <span id="camFovVal">50</span>
             </div>
         </details>
         <div class="control-divider"></div>
@@ -164,4 +192,5 @@
         });
     </script>
 </body>
+
 </html>
