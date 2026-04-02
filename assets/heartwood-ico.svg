@@ -6,10 +6,11 @@
         fill: none;
         stroke: #fff;
         stroke-miterlimit: 10;
+        stroke-width: 3px;
       }
     </style>
   </defs>
-  <circle class="cls-1" cx="104.63" cy="104.63" r="104.13"/>
-  <circle class="cls-1" cx="104.63" cy="104.63" r="72"/>
-  <circle class="cls-1" cx="104.63" cy="104.63" r="37.49"/>
+  <circle class="cls-1" cx="104.63" cy="104.63" r="89.75"/>
+  <circle class="cls-1" cx="104.63" cy="104.63" r="62.05"/>
+  <circle class="cls-1" cx="104.63" cy="104.63" r="32.31"/>
 </svg>
